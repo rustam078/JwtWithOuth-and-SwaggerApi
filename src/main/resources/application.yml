@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: SpringJwtSecurity3X
+  datasource:
+    username: root
+    password: sail
+    url: jdbc:mysql://localhost:3306/jwtsecurity3x
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        hbm2ddl:
+          auto: update
+        show_sql: false
+
+        
