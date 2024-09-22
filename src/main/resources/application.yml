@@ -1,6 +1,6 @@
 spring:
   application:
-    name: SpringJwtSecurity3X
+    name: SpringJwtSecurity3XWithOauth
   datasource:
     username: root
     password: sail
@@ -12,5 +12,12 @@ spring:
         hbm2ddl:
           auto: update
         show_sql: false
+#outh2 google login        
+  security:
+    oauth2:
+      client:
+        registration:
+#        see it from drive docs
+            
 
-        
+ui.domain.path: http://localhost:3000/
