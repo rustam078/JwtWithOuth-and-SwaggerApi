@@ -14,10 +14,12 @@ import com.abc.entity.ERole;
 import com.abc.entity.Role;
 import com.abc.entity.Token;
 import com.abc.entity.UserEntity;
-import com.abc.exception.CustomException;
+import com.abc.exception.CustomerAlreadyExistsException;
+import com.abc.exception.ResourceNotFoundException;
 import com.abc.repo.RoleRepository;
 import com.abc.repo.TokenRepo;
 import com.abc.repo.UserRepository;
+import com.abc.utils.AppConstants;
 
 @Service
 public class AuthService {
@@ -35,17 +37,17 @@ public class AuthService {
 	@Transactional
 	public UserEntity registerUser(RegisterRequest request) {
 		if (userRepository.existsByEmail(request.getEmail())) {
-			throw new CustomException("Email already in use.");
+			throw new CustomerAlreadyExistsException(request.getEmail() +" Email already in use.");
 		}
 
 		Set<Role> roles = new HashSet<>();
 		for (String roleName : request.getRoles()) {
 			try {
 				ERole eRole = ERole.valueOf(roleName.toUpperCase());
-				Role role = roleRepository.findByName(eRole).orElseThrow(() -> new CustomException("Role not found: " + roleName));
+				Role role = roleRepository.findByName(eRole).orElseThrow(() -> new ResourceNotFoundException("Role","role",roleName));
 				roles.add(role);
 			} catch (IllegalArgumentException e) {
-				throw new CustomException("Invalid Role : " + roleName);
+				throw new ResourceNotFoundException("Role","role",roleName);
 			}
 		}
 
@@ -93,5 +95,12 @@ public class AuthService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+
+	public void saveToken(String token, UserEntity user) {
+			Token tokenEntity = Token.builder().user(user).token(token).tokenType(AppConstants.BEARER).revoked(false)
+					.expired(false).build();
+			this.saveOrUpdateToken(tokenEntity);
 	}
 }

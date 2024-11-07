@@ -43,7 +43,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"email\": \"rustam@gmail.com\",\r\n    \"password\": \"123456\"\r\n}",
+					"raw": "{\r\n    \"email\": \"rust@gmail.com\",\r\n    \"password\": \"123456\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -61,6 +61,36 @@
 						"api",
 						"auth",
 						"signin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "refresh-token",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"refreshToken\":\"21f811b8-f609-4a9a-9979-e5638af8d7cf\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/auth/refresh-token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"auth",
+						"refresh-token"
 					]
 				}
 			},
@@ -148,7 +178,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJJU1NVRVIiLCJzdWIiOiJydXN0YW1AZ21haWwuY29tIiwiaWF0IjoxNzI0NDQ1ODM4LCJleHAiOjE3MjQ0ODkwMzh9.qWxhdLfxYHLdi8JZ0u4MKWuRAd6YDKHvj1cngQqfzTKA4kcsihIW_OT2SiavACbo",
+							"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJJU1NVRVIiLCJzdWIiOiJydXN0QGdtYWlsLmNvbSIsImlhdCI6MTcyODgxNzA3OCwiZXhwIjoxNzI4ODE3MTI4fQ.uD1LgJkwjeegBgmZxhfArNZu9zh_nMsAAxDlSA_j57WLEsOhL7h7ERmMK4VUYi5q",
 							"type": "string"
 						}
 					]
@@ -166,6 +196,141 @@
 						"api",
 						"auth",
 						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add_product",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJJU1NVRVIiLCJzdWIiOiJydXN0YW1AZ21haWwuY29tIiwiaWF0IjoxNzI4ODAzMDAyLCJleHAiOjE3Mjg4NDYyMDJ9.NY1jFyOsi5OFNRqgjw6x92qYahbV3a2Cu_Ry2vZbiNYdZrtOHVZcihkYRAX7mm52",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Laptop\",\r\n  \"price\": 1200.00\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update_product",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJJU1NVRVIiLCJzdWIiOiJydXN0QGdtYWlsLmNvbSIsImlhdCI6MTcyODgwNDU5MywiZXhwIjoxNzI4ODQ3NzkzfQ.eC6ASBPgFjAKVoNt6o_aQIW8N_fHAPqUUbrw0U0wiNPHPXC2FT_r7QXqfACkbFza",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Laptop\",\r\n  \"price\": 2000.00\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/products/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"products",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllproduct",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJJU1NVRVIiLCJzdWIiOiJydXN0QGdtYWlsLmNvbSIsImlhdCI6MTcyODgwNDU5MywiZXhwIjoxNzI4ODQ3NzkzfQ.eC6ASBPgFjAKVoNt6o_aQIW8N_fHAPqUUbrw0U0wiNPHPXC2FT_r7QXqfACkbFza",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getLoggedUser details",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJJU1NVRVIiLCJzdWIiOiJydXN0YW1AZ21haWwuY29tIiwiaWF0IjoxNzI0NzQwNDc3LCJleHAiOjE3MjQ3ODM2Nzd9.OliP5HYWKt9qSDMTb51EOzy3I9sp31leRhojZrvvv7YvJ8hwXl1vb815z-2v1SCE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/getLoggedUser",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"getLoggedUser"
 					]
 				}
 			},

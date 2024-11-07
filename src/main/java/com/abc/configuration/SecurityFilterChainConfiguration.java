@@ -42,7 +42,7 @@ public class SecurityFilterChainConfiguration {
 			// register filter for 2nd request onwards
 
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) // Add JWT filter before UsernamePasswordAuthenticationFilter
-			.logout(logout->logout.logoutUrl("/api/logout")
+			.logout(logout->logout.logoutUrl("/api/auth/logout")
                 .addLogoutHandler(logoutHandler) 
                 .logoutSuccessHandler((request, response, authentication) ->
                     SecurityContextHolder.clearContext() 

@@ -1,5 +1,6 @@
 package com.abc.controller;
 
+import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,15 +20,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.abc.dto.AuthenticationRequest;
 import com.abc.dto.AuthenticationResponse;
+import com.abc.dto.RefreshTokenDto;
 import com.abc.dto.RegisterRequest;
-import com.abc.entity.Token;
+import com.abc.entity.RefreshToken;
 import com.abc.entity.UserEntity;
-import com.abc.repo.TokenRepo;
+import com.abc.exception.InvalidCredentialsException;
+import com.abc.exception.ResponseDto;
 import com.abc.services.AuthService;
+import com.abc.services.RefreshTokenService;
 import com.abc.utils.AppConstants;
 import com.abc.utils.JwtUtils;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -43,69 +45,58 @@ public class AuthController {
 	@Autowired
 	private JwtUtils jwtUtils;
 	@Autowired
-	private TokenRepo tokenRepository;
+	private RefreshTokenService refreshTokenService;
 
 	@PostMapping("/register")
-	public ResponseEntity<UserEntity> registerUser(@Valid @RequestBody RegisterRequest request) {
-		UserEntity user = userService.registerUser(request);
-		return ResponseEntity.ok(user);
+	public ResponseEntity<ResponseDto> registerUser(@Valid @RequestBody RegisterRequest request) {
+		userService.registerUser(request);
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(new ResponseDto(AppConstants.STATUS_201, AppConstants.MESSAGE_201));
 	}
-	
-	@GetMapping("/test")
-		public String hello() {
-			return "Rustam";
-		}
-	
 
 	@PostMapping("/signin")
-	public ResponseEntity<?> authenticateUser(@RequestBody AuthenticationRequest loginRequest) {
+	public ResponseEntity<?> authenticateUser(@Valid @RequestBody AuthenticationRequest loginRequest) {
 		Authentication authentication = null;
 		try {
 			authentication = authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 		} catch (Exception e) {
 			LOG.error("LOGIN ERROR : {}", e.getMessage());
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
+			throw new InvalidCredentialsException("Invalid email or password.");
 		}
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-
-		String token = jwtUtils.generateToken(authentication);
 		UserEntity user = userService.findByEmail(loginRequest.getEmail()).orElse(null);
-		if (user == null)
-			return new ResponseEntity<>("User not Found", HttpStatus.NOT_FOUND);
-
-		userService.revokeAllUserValidTokens(user);
-		saveToken(token, user);
-
-		Set<String> roles = user.getRoles().stream().map(item -> item.getName().toString()).collect(Collectors.toSet());
-		return new ResponseEntity<>(new AuthenticationResponse(AppConstants.BEARER + " " + token, user.getUserId(),
-				user.getName(), user.getEmail(), roles), HttpStatus.OK);
-
-	}
-
-	@PostMapping("/logout")
-	public ResponseEntity<String> signout(HttpServletRequest request) {
-		String authHeader = request.getHeader("Authorization");
-		if (authHeader == null || !authHeader.startsWith("Bearer"))
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		String jwt = authHeader.substring(7);
-		Token storedToken = userService.findByToken(jwt).orElse(null);
-		if (storedToken != null) {
-//			      storedToken.setExpired(true);
-//			      storedToken.setRevoked(true);
-//			      tokenRepository.save(storedToken);
-			tokenRepository.deleteById(storedToken.getTokenId());
-			SecurityContextHolder.clearContext();
-			return new ResponseEntity<>("Logout Success!...", HttpStatus.CREATED);
+		if (user == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ResponseDto(AppConstants.NOT_FOUND_404, "User Details not Found please SignUp First"));
 		}
 
-		return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		String token = jwtUtils.generateToken(authentication);
+		RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+		Date expirationDate = jwtUtils.extractExpiration(token);
+		userService.revokeAllUserValidTokens(user);
+		userService.saveToken(token, user);
+
+		Set<String> roles = user.getRoles().stream().map(item -> item.getName().toString()).collect(Collectors.toSet());
+		return new ResponseEntity<>(
+				new AuthenticationResponse(AppConstants.BEARER + " " + token, refreshToken.getRefreshToken(),
+						expirationDate.getTime(), user.getUserId(), user.getName(), user.getEmail(), roles),
+				HttpStatus.OK);
 	}
 
-	private void saveToken(String token, UserEntity user) {
-		Token tokenEntity = Token.builder().user(user).token(token).tokenType(AppConstants.BEARER).revoked(false)
-				.expired(false).build();
-		userService.saveOrUpdateToken(tokenEntity);
+	@PostMapping("/refresh-token")
+	public ResponseEntity<?> refreshToken(@Valid @RequestBody RefreshTokenDto refreshToken) {
+		RefreshToken refreshTokenObj = refreshTokenService.verifyRefreshToken(refreshToken.getRefreshToken());
+		UserEntity user = refreshTokenObj.getUser();
+		String newAccessToken = jwtUtils.generateRefreshToken(user.getEmail());
+		Date expirationDate = jwtUtils.extractExpiration(newAccessToken);
+		userService.revokeAllUserValidTokens(user);
+		userService.saveToken(newAccessToken, user);
+		Set<String> roles = user.getRoles().stream().map(item -> item.getName().toString()).collect(Collectors.toSet());
+		return ResponseEntity.ok(AuthenticationResponse.builder().token(AppConstants.BEARER + " " + newAccessToken)
+				.refreshToken(refreshToken.getRefreshToken()).accessTokenExpiry(expirationDate.getTime())
+				.id(user.getUserId()).name(user.getName()).email(user.getEmail()).roles(roles).build());
 	}
+
 }

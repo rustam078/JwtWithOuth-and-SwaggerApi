@@ -1,7 +1,6 @@
 package com.abc.utils;
 
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 
@@ -25,18 +24,22 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtils {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JwtUtils.class);
-	private final String SECRET_KEY = "4bb6d1dfbafb64a681139d1586b6f1160d18159afd57c8c79136d7490630407c";
 
 	@Value("${Jwt_Issuer}")
 	private String issuer;
-
-
+	@Value("${jwt.secret}")
+	private String SECRET_KEY;
+	@Value("${jwt.access.expiration-ms}")
+    private long accessTokenExpirationMs;
 
 	public String generateToken(Authentication authentication) {
 		UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
 		return getToken(principal.getEmail());
 	}
 
+	public String generateRefreshToken(String email) {
+		return getToken(email);
+	}
 
 	private Claims getClaims(String token) {
 		try {
@@ -118,7 +121,8 @@ public class JwtUtils {
 				      .issuer(issuer)
 				      .subject(subject)
 				      .issuedAt(new Date(System.currentTimeMillis()))
-					  .expiration(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(12)))
+//					  .expiration(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(12)))
+					  .expiration(new Date(System.currentTimeMillis() + accessTokenExpirationMs))
 					  .signWith(getSigninKey())
 					  .compact();
 	}
@@ -137,5 +141,23 @@ public class JwtUtils {
 		byte[] keyBytes = Decoders.BASE64URL.decode(SECRET_KEY);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
+
+	  public Date extractExpiration(String token) {
+			try {
+				if (token != null && !token.isEmpty() && isValidToken(token)) {
+					Date expireTokenTime = getClaims(token).getExpiration();
+					return expireTokenTime;
+				} else
+					return null;
+			} catch (ExpiredJwtException e) {
+				LOGGER.error("ERROR:ExpiredJwtException Getting email from TOKEN, {} ", e.getMessage());
+				return null;
+			} catch (Exception e) {
+				LOGGER.error("ERROR:Exception Getting email from TOKEN, {}", e.getMessage());
+				return null;
+			}
+	    }
+	  
+	
 
 }
